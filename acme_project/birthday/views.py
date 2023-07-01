@@ -1,4 +1,6 @@
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.generic import ListView
 
 
 from birthday.forms import BirthdayForm
@@ -12,7 +14,11 @@ def birthday(request, pk=None):
     else:
         instance = None
 
-    form = BirthdayForm(request.POST or None, instance=instance)
+    form = BirthdayForm(
+        request.POST or None,
+        files=request.FILES or None,
+        instance=instance
+    )
     context = {'form': form}
     if form.is_valid():
         form.save()
@@ -23,11 +29,20 @@ def birthday(request, pk=None):
     return render(request, 'birthday/birthday.html', context=context)
 
 
-def birthday_list(request):
-    birthdays = Birthday.objects.all()
-    return render(
-        request, 'birthday/birthday_list.html', {'birthdays': birthdays}
-    )
+class BirthdayListView(ListView):
+    model = Birthday
+    ordering = 'id'
+    paginate_by = 10
+
+
+# def birthday_list(request):
+#     birthdays = Birthday.objects.order_by('id')
+#     paginator = Paginator(birthdays, 10)
+#     page_number = request.GET.get('page')
+#     page_obj = paginator.get_page(page_number)
+#     return render(
+#         request, 'birthday/birthday_list.html', {'page_obj': page_obj}
+#     )
 
 
 def delete_birthday(request, pk):
